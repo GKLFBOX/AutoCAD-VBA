@@ -16,7 +16,7 @@ Public Sub ComparePart()
     
     Dim pickPoint As Variant
     
-    
+    ' Rectangleを作成してSelectByPolygonする
     
     Dim partialSet As ZcadSelectionSet
     Set partialSet = ThisDrawing.SelectionSets.Add("NewSelectionSet")
