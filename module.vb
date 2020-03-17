@@ -15,11 +15,34 @@ Option Explicit
 Public Sub ComparePart()
     
     Dim pickPoint As Variant
+    Dim pickObject As ZcadEntity
+    ThisDrawing.Utility.GetEntity pickObject, pickPoint, _
+        "境界オブジェクトを選択 [Cancel(ESC)]"
     
-    ' Rectangleを作成してSelectByPolygonする
+    pickObject.Highlight True
+    
+    If TypeOf pickObject Is ZcadLWPolyline Then
+        ' 矩形に指定する
+        Dim boundaryLine As ZcadLWPolyline
+        Set boundaryLine = pickObject
+        
+        Dim boundaryPoints As Variant
+        boundaryPoints = boundaryLine.Coordinates
+        
+        
+    Else
+        ThisDrawing.Utility.Prompt "ポリラインを選択してくだしあ" & vbCrLf
+        'pickObject.Highlight False
+        Exit Sub
+    End If
     
     Dim partialSet As ZcadSelectionSet
-    Set partialSet = ThisDrawing.SelectionSets.Add("NewSelectionSet")
+    Set partialSet = ThisDrawing.SelectionSets.Add("aaa")
     
+    partialSet.SelectByPolygon zcSelectionSetFence, boundaryPoints
+    
+    partialSet.Erase
+    
+    partialSet.Delete
     
 End Sub
