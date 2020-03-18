@@ -14,3 +14,8 @@ public function istextobject(byval target_object as zcadentity) as boolean
   
 end function
 
+public sub resetcondition(byval target_object as zcadentity)
+  
+  if not target_object is nothing then target_object.highlight false
+  
+end sub
