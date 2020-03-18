@@ -30,10 +30,23 @@ Public Sub ComparePart()
         Dim boundaryPoints As Variant
         boundaryPoints = boundaryLine.Coordinates
         
+        If UBound(boundaryPoints) = 7 Then
+            boundaryPoints(0) = boundaryPoints(0)
+            
+            ' xy軸なりの長方形の証明
+            ' 点1,点2の線分がxまたはyに並行かつ対角線の長さが等しい
+            
+            
+            
+        Else
+            ThisDrawing.Utility.Prompt "四角形を選択してくだしあ" & vbCrLf
+            pickObject.Highlight False
+            Exit Sub
+        End If
         
     Else
         ThisDrawing.Utility.Prompt "ポリラインを選択してくだしあ" & vbCrLf
-        'pickObject.Highlight False
+        pickObject.Highlight False
         Exit Sub
     End If
     
