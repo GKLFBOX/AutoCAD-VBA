@@ -23,6 +23,7 @@ Public Sub ComparePart()
     
     If TypeOf pickObject Is ZcadLWPolyline Then
         ' 矩形に指定する
+        ' 4頂点のポリライン/水平および並行の判定
         Dim boundaryLine As ZcadLWPolyline
         Set boundaryLine = pickObject
         
@@ -35,6 +36,8 @@ Public Sub ComparePart()
         'pickObject.Highlight False
         Exit Sub
     End If
+    
+    ' Coodinatesにz軸要素をつけて3点の配列に変換する
     
     Dim partialSet As ZcadSelectionSet
     Set partialSet = ThisDrawing.SelectionSets.Add("aaa")
