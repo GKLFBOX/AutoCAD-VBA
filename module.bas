@@ -22,30 +22,37 @@ Public Sub ComparePart()
     pickObject.Highlight True
     
     If TypeOf pickObject Is ZcadLWPolyline Then
-        ' 矩形に指定する
-        ' 4頂点のポリライン/水平および並行の判定
+        
         Dim boundaryLine As ZcadLWPolyline
         Set boundaryLine = pickObject
         
         Dim boundaryPoints As Variant
         boundaryPoints = boundaryLine.Coordinates
         
+        ' 4頂点のポリライン判定
         If UBound(boundaryPoints) = 7 Then
-            boundaryPoints(0) = boundaryPoints(0)
             
-            ' xy軸なりの長方形の証明
-            ' 点1,点2の線分がxまたはyに並行かつ対角線の長さが等しい
+            Dim n As Long
+            Dim point_x(0 To 3) As Double
+            Dim point_y(0 To 3) As Double
+            
+            For n = 0 To 3
+                point_x(n) = boundaryPoints(n + n)
+                point_y(n) = boundaryPoints(n + n + 1)
+            Next n
+            
+            ' 対角線の長さが等しく、それぞれの中点で交わるとき長方形になる
             
             
             
         Else
-            ThisDrawing.Utility.Prompt "四角形を選択してくだしあ" & vbCrLf
+            ThisDrawing.Utility.Prompt "(test)四角形を選択してくだしあ" & vbCrLf
             pickObject.Highlight False
             Exit Sub
         End If
         
     Else
-        ThisDrawing.Utility.Prompt "ポリラインを選択してくだしあ" & vbCrLf
+        ThisDrawing.Utility.Prompt "(test)ポリラインを選択してくだしあ" & vbCrLf
         pickObject.Highlight False
         Exit Sub
     End If
