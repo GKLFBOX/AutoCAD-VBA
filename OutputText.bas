@@ -1,53 +1,68 @@
 Attribute VB_Name = "OutputText"
 '------------------------------------------------------------------------------
-' ## ƒR[ƒfƒBƒ“ƒOƒKƒCƒhƒ‰ƒCƒ“
+' ## ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ã‚¬ã‚¤ãƒ‰ãƒ©ã‚¤ãƒ³
 '
-' [You.Activate|VBAƒR[ƒfƒBƒ“ƒOƒKƒCƒhƒ‰ƒCƒ“]‚É€‹’‚·‚é
+' [You.Activate|VBAã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ã‚¬ã‚¤ãƒ‰ãƒ©ã‚¤ãƒ³]ã«æº–æ‹ ã™ã‚‹
 ' (http://www.thom.jp/vbainfo/codingguideline.html)
 '
 '------------------------------------------------------------------------------
 Option Explicit
 
 '------------------------------------------------------------------------------
-' ## •¶šƒIƒuƒWƒFƒNƒg‚Ìcsvo—ÍƒvƒƒOƒ‰ƒ€
+' ## æ–‡å­—ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®csvå‡ºåŠ›ãƒ—ãƒ­ã‚°ãƒ©ãƒ 
 '
-' •¶šƒIƒuƒWƒFƒNƒg‚Ì“à—e‚Æ‘®«‚ğcsvŒ`®‚Åo—Í‚·‚é
+' æ–‡å­—ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å†…å®¹ã¨å±æ€§ã‚’csvå½¢å¼ã§å‡ºåŠ›ã™ã‚‹
 '------------------------------------------------------------------------------
 Sub OutputText()
     
-    'On Error GoTo Error_Handler
+    On Error GoTo Error_Handler
     
-    ' }‘è‚Ì‘I‘ğ
+    ' å›³é¡Œã®é¸æŠ
     Dim pickPoint As Variant
     Dim targetFigure As ZcadEntity
     ThisDrawing.Utility.GetEntity targetFigure, pickPoint, _
-        "}‘è(•¶šƒIƒuƒWƒFƒNƒg)‚ğ‘I‘ğ [Cancel(ESC)]"
+        "å›³é¡Œã‚’é¸æŠ [Cancel(ESC)]"
     
-    targetFigure.Highlight True
+    targetFigure.Highlight False
     
-    ' csvŒü‚¯‚É}‘è‚Ì•¶š—ñ‰»ˆ—
+    If Not GeneralRoutine.isTextObject(targetFigure) Then
+        ThisDrawing.Utility.Prompt "ã‚¨ãƒ©ãƒ¼ï¼šæ–‡å­—ã‚’é¸æŠã—ã¦ãã ã•ã„ã€‚" & vbCrLf
+        Exit Sub
+    End If
+    
+    ThisDrawing.Utility.Prompt _
+        "å›³é¡Œã¯ã€Œ" & targetFigure.TextString & "ã€ã§ã™ã€‚" & vbCrLf
+    ThisDrawing.Utility.Prompt _
+        "å•é¡ŒãŒç„¡ã‘ã‚Œã°å‡ºåŠ›ç¯„å›²ã‚’é¸æŠã—ã¦ãã ã•ã„ã€‚" & vbCrLf
+    
+    ' å›³é¡Œã®csvç”¨æ–‡å­—åˆ—åŒ–å‡¦ç†
     Dim figureText As String
     figureText = _
     """" & Replace(targetFigure.TextString, """", """""") & """"
     
-    If Not GeneralRoutine.isTextObject(targetFigure) Then
-        targetFigure.Highlight False
-        ThisDrawing.Utility.Prompt "•¶š‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢B" & vbCrLf
-        Exit Sub
-    End If
-    
-    targetFigure.Highlight False
-    
-    ' o—Í‘ÎÛ‚ğ”ÍˆÍ‘I‘ğ
+    ' å‡ºåŠ›å¯¾è±¡ã‚’ç¯„å›²é¸æŠ
     Dim targetSelectionSet As ZcadSelectionSet
-    
     Set targetSelectionSet = ThisDrawing.SelectionSets.Add("NewSelectionSet")
     targetSelectionSet.SelectOnScreen
     
-    ' o—Íƒf[ƒ^‚Ìì¬
+    ' å‡ºåŠ›ãƒ‡ãƒ¼ã‚¿ã®æº–å‚™
+    Dim filePath As String
+    Dim outputFile As String
+    
+    filePath = Left(ThisDrawing.FullName, Len(ThisDrawing.FullName) - 4)
+    outputFile = filePath & "_ãƒ†ã‚­ã‚¹ãƒˆãƒ‡ãƒ¼ã‚¿.csv"
+    
+    Dim outputData As String
+    If Dir(outputFile) = "" Then
+        outputData = _
+            "å›³é¡Œ,ç”»å±¤,è‰²,ã‚¹ã‚¿ã‚¤ãƒ«,å†…å®¹,æ–‡å­—é«˜ã•,Xåº§æ¨™,Yåº§æ¨™,Zåº§æ¨™" & vbCrLf
+    End If
+    
+    ' å‡ºåŠ›ãƒ‡ãƒ¼ã‚¿ã®ä½œæˆ
+    ' TODO: ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£ã‚’åˆ†å‰²ã™ã‚‹
     If Not targetSelectionSet.Count = 0 Then
         
-        Dim extractObject As ZcadEntity  ' •Ï”–¼‚ªv‚¢‚Â‚©‚È‚¢‚½‚ß—vŒŸ“¢
+        Dim extractObject As ZcadEntity
         Dim exLayer As String
         Dim exColor As Long
         Dim exStyle As String
@@ -55,47 +70,48 @@ Sub OutputText()
         Dim exHeight As Double
         Dim exCoordinate As Variant
         
-        Dim outputData As String
-        
-        outputData = _
-        "}‘è,‰æ‘w,F,ƒXƒ^ƒCƒ‹,“à—e,•¶š‚‚³,XÀ•W,YÀ•W,ZÀ•W" & vbCrLf
-        
         For Each extractObject In targetSelectionSet
             If GeneralRoutine.isTextObject(extractObject) Then
                 
-                exLayer = """" & Replace(extractObject.Layer, """", """""") & """"
-                exColor = extractObject.TrueColor.ColorIndex
-                exStyle = """" & Replace(extractObject.StyleName, """", """""") & """"
-                exText = """" & Replace(extractObject.TextString, """", """""") & """"
-                exHeight = extractObject.Height
-                exCoordinate = extractObject.InsertionPoint
+                With extractObject
+                    exLayer = """" & Replace(.Layer, """", """""") & """"
+                    exColor = .TrueColor.ColorIndex
+                    exStyle = """" & Replace(.StyleName, """", """""") & """"
+                    exText = """" & Replace(.TextString, """", """""") & """"
+                    exHeight = .Height
+                    exCoordinate = .InsertionPoint
+                End With
                 
-                outputData = outputData & figureText & "," & exLayer & "," & _
-                exColor & "," & exStyle & "," & exText & "," & exHeight & "," & _
-                exCoordinate(0) & "," & exCoordinate(1) & "," & exCoordinate(2) & vbCrLf
+                outputData = outputData & _
+                    figureText & "," & _
+                    exLayer & "," & _
+                    exColor & "," & _
+                    exStyle & "," & _
+                    exText & "," & _
+                    exHeight & "," & _
+                    exCoordinate(0) & "," & _
+                    exCoordinate(1) & "," & _
+                    exCoordinate(2) & vbCrLf
                 
             End If
         Next extractObject
         
     End If
     
+    outputData = Left(outputData, Len(outputData) - 2)
     targetSelectionSet.Delete
     
-    Dim filePath As String
-    Dim outputFile As String
-    
-    filePath = Left(ThisDrawing.FullName, Len(ThisDrawing.FullName) - 4)
-    outputFile = filePath & "_ƒeƒLƒXƒgƒf[ƒ^.csv"
-    Open outputFile For Output As #1
+    ' å‡ºåŠ›ãƒ‡ãƒ¼ã‚¿ã®æ›¸ãå‡ºã—
+    Open outputFile For Append As #1
     Print #1, outputData
     Close #1
     
-    MsgBox "ƒeƒLƒXƒg’Šo‚ªŠ®—¹‚µ‚Ü‚µ‚½B"
+    ThisDrawing.Utility.Prompt "ãƒ†ã‚­ã‚¹ãƒˆæŠ½å‡ºãŒå®Œäº†ã—ã¾ã—ãŸã€‚" & vbCrLf
     
     Exit Sub
     
 Error_Handler:
-    ThisDrawing.Utility.Prompt "ƒGƒ‰[FƒRƒ}ƒ“ƒh‚ğI—¹‚µ‚Ü‚·B" & vbCrLf
+    ThisDrawing.Utility.Prompt "ã‚¨ãƒ©ãƒ¼ï¼šã‚³ãƒãƒ³ãƒ‰ã‚’çµ‚äº†ã—ã¾ã™ã€‚" & vbCrLf
     targetSelectionSet.Delete
     
 End Sub
