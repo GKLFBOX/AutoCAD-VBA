@@ -1,76 +1,76 @@
 Attribute VB_Name = "OutputText"
 '------------------------------------------------------------------------------
-' ## ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ã‚¬ã‚¤ãƒ‰ãƒ©ã‚¤ãƒ³
+' ## ƒR[ƒfƒBƒ“ƒOƒKƒCƒhƒ‰ƒCƒ“
 '
-' [You.Activate|VBAã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ã‚¬ã‚¤ãƒ‰ãƒ©ã‚¤ãƒ³]ã«æº–æ‹ ã™ã‚‹
+' [You.Activate|VBAƒR[ƒfƒBƒ“ƒOƒKƒCƒhƒ‰ƒCƒ“]‚É€‹’‚·‚é
 ' (http://www.thom.jp/vbainfo/codingguideline.html)
 '
 '------------------------------------------------------------------------------
 Option Explicit
 
 '------------------------------------------------------------------------------
-' ## æ–‡å­—ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®csvå‡ºåŠ›ãƒ—ãƒ­ã‚°ãƒ©ãƒ 
+' ## •¶šƒIƒuƒWƒFƒNƒg‚Ìcsvo—ÍƒvƒƒOƒ‰ƒ€
 '
-' æ–‡å­—ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å†…å®¹ã¨å±æ€§ã‚’csvå½¢å¼ã§å‡ºåŠ›ã™ã‚‹
+' •¶šƒIƒuƒWƒFƒNƒg‚Ì“à—e‚Æ‘®«‚ğcsvŒ`®‚Åo—Í‚·‚é
 '------------------------------------------------------------------------------
 Public Sub OutputText()
     
     On Error GoTo Error_Handler
     
-    ' å›³é¡Œã®é¸æŠ
+    ' }‘è‚Ì‘I‘ğ
     Dim pickPoint As Variant
     Dim targetFigure As ZcadEntity
     ThisDrawing.Utility.GetEntity targetFigure, pickPoint, _
-        "å›³é¡Œã‚’é¸æŠ [Cancel(ESC)]"
+        "}‘è‚ğ‘I‘ğ [Cancel(ESC)]"
     
     Call CommonSub.ResetHighlight(targetFigure)
     
     If Not CommonFunction.IsTextObject(targetFigure) Then
-        ThisDrawing.Utility.Prompt "ã‚¨ãƒ©ãƒ¼ï¼šæ–‡å­—ã‚’é¸æŠã—ã¦ãã ã•ã„ã€‚" & vbCrLf
+        ThisDrawing.Utility.Prompt "ƒGƒ‰[F•¶š‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢B" & vbCrLf
         Exit Sub
     End If
     
     ThisDrawing.Utility.Prompt _
-        "å›³é¡Œã¯ã€Œ" & targetFigure.TextString & "ã€ã§ã™ã€‚" & vbCrLf
+        "}‘è‚Íu" & targetFigure.TextString & "v‚Å‚·B" & vbCrLf
     ThisDrawing.Utility.Prompt _
-        "å•é¡ŒãŒç„¡ã‘ã‚Œã°å‡ºåŠ›ç¯„å›²ã‚’é¸æŠã—ã¦ãã ã•ã„ã€‚" & vbCrLf
+        "–â‘è‚ª–³‚¯‚ê‚Îo—Í”ÍˆÍ‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢B" & vbCrLf
     
-    ' å‡ºåŠ›å¯¾è±¡ã‚’ç¯„å›²é¸æŠ
+    ' o—Í‘ÎÛ‚ğ”ÍˆÍ‘I‘ğ
     Dim targetSelectionSet As ZcadSelectionSet
     Set targetSelectionSet = ThisDrawing.SelectionSets.Add("NewSelectionSet")
     targetSelectionSet.SelectOnScreen
     
-    ' å‡ºåŠ›ãƒ‡ãƒ¼ã‚¿ã®æº–å‚™
+    ' o—Íƒf[ƒ^‚Ì€”õ
     Dim outputFile As String
-    outputFile = CommonFunction.MakeFilePath("_ãƒ†ã‚­ã‚¹ãƒˆãƒ‡ãƒ¼ã‚¿", ".csv")
+    outputFile = CommonFunction.MakeFilePath("_ƒeƒLƒXƒgƒf[ƒ^", ".csv")
     
     Dim outputData As String
     If Dir(outputFile) = "" Then
         outputData = _
-            "å›³é¡Œ,ç”»å±¤,è‰²,ã‚¹ã‚¿ã‚¤ãƒ«,å†…å®¹,æ–‡å­—é«˜ã•,Xåº§æ¨™,Yåº§æ¨™,Zåº§æ¨™" & vbCrLf
+            "}‘è,‰æ‘w,F,ƒXƒ^ƒCƒ‹,“à—e,•¶š‚‚³,XÀ•W,YÀ•W,ZÀ•W" & vbCrLf
     End If
     
-    ' å‡ºåŠ›ãƒ‡ãƒ¼ã‚¿ã®ä½œæˆ
+    ' o—Íƒf[ƒ^‚Ìì¬
     If Not targetSelectionSet.Count = 0 Then
         Call makeTextData(targetSelectionSet, targetFigure, outputData)
     End If
     
     Call CommonSub.ReleaseSelectionSet(targetSelectionSet)
     
-    ' å‡ºåŠ›ãƒ‡ãƒ¼ã‚¿ã®æ›¸ãå‡ºã—
+    ' o—Íƒf[ƒ^‚Ì‘‚«o‚µ
     Call outputCSV(outputFile, outputData)
-    ThisDrawing.Utility.Prompt "ãƒ†ã‚­ã‚¹ãƒˆæŠ½å‡ºãŒå®Œäº†ã—ã¾ã—ãŸã€‚" & vbCrLf
+    ThisDrawing.Utility.Prompt "ƒeƒLƒXƒg’Šo‚ªŠ®—¹‚µ‚Ü‚µ‚½B" & vbCrLf
     
     Exit Sub
     
 Error_Handler:
-    ThisDrawing.Utility.Prompt "ã‚¨ãƒ©ãƒ¼ï¼šã‚³ãƒãƒ³ãƒ‰ã‚’çµ‚äº†ã—ã¾ã™ã€‚" & vbCrLf
     Call CommonSub.ReleaseSelectionSet(targetSelectionSet)
+    ThisDrawing.Utility.Prompt "ƒGƒ‰[FƒRƒ}ƒ“ƒh‚ğI—¹‚µ‚Ü‚·B" & vbCrLf
     
 End Sub
 
 '------------------------------------------------------------------------------
-' ## csvãƒ•ã‚¡ã‚¤ãƒ«ã¸ã®å‡ºåŠ›
+' ## csvƒtƒ@ƒCƒ‹‚Ö‚Ìo—Í
 '------------------------------------------------------------------------------
 Private Sub outputCSV(ByVal output_file As String, ByVal output_data As String)
     
@@ -81,17 +81,17 @@ Private Sub outputCSV(ByVal output_file As String, ByVal output_data As String)
 End Sub
 
 '------------------------------------------------------------------------------
-' ## csvå½¢å¼ã®ãƒ‡ãƒ¼ã‚¿ä½œæˆ
+' ## csvŒ`®‚Ìƒf[ƒ^ì¬
 '------------------------------------------------------------------------------
 Private Sub makeTextData(ByVal target_selectionset As ZcadSelectionSet, _
                          ByVal target_figure As ZcadEntity, _
                          ByRef output_data As String)
     
-    ' å›³é¡Œã®csvç”¨æ–‡å­—åˆ—åŒ–æ•´å½¢å‡¦ç†
+    ' }‘è‚Ìcsv—p•¶š—ñ‰»®Œ`ˆ—
     Dim figureText As String
     figureText = formatString(target_figure.TextString)
     
-    ' æ–‡å­—åˆ—åŒ–å‡¦ç†ã¨csvå½¢å¼ãƒ‡ãƒ¼ã‚¿ä½œæˆ
+    ' •¶š—ñ‰»ˆ—‚ÆcsvŒ`®ƒf[ƒ^ì¬
     Dim extractObject As ZcadEntity
     Dim exLayer As String
     Dim exColor As Long
@@ -126,12 +126,12 @@ Private Sub makeTextData(ByVal target_selectionset As ZcadSelectionSet, _
         End If
     Next extractObject
     
-    output_data = Left(output_data, Len(output_data) - 2) ' æœ€çµ‚è¡Œã®æ”¹è¡Œå‰Šé™¤
+    output_data = Left(output_data, Len(output_data) - 2) ' ÅIs‚Ì‰üsíœ
     
 End Sub
 
 '------------------------------------------------------------------------------
-' ## csvç”¨ã®æ–‡å­—åˆ—æ•´å½¢(ãƒ€ãƒ–ãƒ«ã‚¯ã‚©ãƒ¼ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³ã®ä»˜åŠ ã¨æ–‡å­—åŒ–)
+' ## csv—p‚Ì•¶š—ñ®Œ`(ƒ_ƒuƒ‹ƒNƒH[ƒe[ƒVƒ‡ƒ“‚Ì•t‰Á‚Æ•¶š‰»)
 '------------------------------------------------------------------------------
 Private Function formatString(ByVal target_text As String) As String
     
