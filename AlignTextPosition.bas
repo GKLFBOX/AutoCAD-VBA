@@ -19,7 +19,7 @@ Public Sub AlignTextPosition()
     
     ' 対象の選択/指定/入力
     Dim pickPoint As Variant
-    Dim targetText As ZcadEntity
+    Dim targetText As ZcadEntity    ' TODO: targetは型指定を要否を検討する
     ThisDrawing.Utility.GetEntity targetText, pickPoint, _
         "文字オブジェクトを選択 [Cancel(ESC)]"
     
@@ -28,31 +28,33 @@ Public Sub AlignTextPosition()
         Exit Sub
     End If
     
+    targetText.Highlight True
+    
     Dim firstPoint As Variant
     Dim secondPoint As Variant
     firstPoint = ThisDrawing.Utility.GetPoint _
-                 (, "1点目を指定 [Cancel(ESC)]")
+        (, "1点目を指定 [Cancel(ESC)]")
     secondPoint = ThisDrawing.Utility.GetPoint _
-                  (firstPoint, "2点目を指定 [Cancel(ESC)]")
+        (firstPoint, "2点目を指定 [Cancel(ESC)]")
     
-    Dim offsetAmount As Double
-    offsetAmount = ThisDrawing.Utility.GetReal _
-                   ("オフセット係数を入力(文字高さに対する割合(x/10) " & _
-                    "[通常(2)/広め(3)/狭い(1)/超広め(5)]:")
-    offsetAmount = offsetAmount * 0.1
+    Dim offsetFactor As Double
+    offsetFactor = ThisDrawing.Utility.GetReal _
+        ("オフセット係数を入力(文字高さに対する割合(x/10) " & _
+         "[通常(2)/広め(3)/狭い(1)/超広め(5)]:")
+    offsetFactor = offsetFactor * 0.1
     
     Dim underFlag As String
-    underFlag = ThisDrawing.Utility.GetString(0, _
-                "下付きにしますか? [はい(Y)/いいえ(N)]:")
+    underFlag = ThisDrawing.Utility.GetString _
+        (0, "下付きにしますか? [はい(Y)/いいえ(N)]:")
     
-    If underFlag = "Y" Then offsetAmount = offsetAmount * -1
+    If underFlag = "Y" Then offsetFactor = offsetFactor * -1
     
     targetText.Rotation = 0 ' オフセット量の適用簡略化のため角度要素削除
     
     ' 中点位置の取得
     Dim textCenter() As Double
     textCenter = getTextCenter(targetText)
-    textCenter(1) = textCenter(1) - targetText.Height * Abs(offsetAmount)
+    textCenter(1) = textCenter(1) - targetText.Height * Abs(offsetFactor)
     
     ' 文字位置調整の実行
     Dim alignPoint() As Double
@@ -64,7 +66,7 @@ Public Sub AlignTextPosition()
     targetText.Rotate alignPoint, alignRad
     
     ' 下付き判定と処理
-    If offsetAmount < 0 Then
+    If offsetFactor < 0 Then
         Dim mirrorText As ZcadEntity
         Set mirrorText = targetText.Mirror(firstPoint, secondPoint)
         targetText.Delete
