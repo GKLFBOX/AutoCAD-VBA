@@ -17,7 +17,7 @@ Public Sub AlignTextPosition()
     
     On Error GoTo Error_Handler
     
-    ' 対象の選択/指定/入力
+    ' 対象の選択
     Dim pickPoint As Variant
     Dim targetText As ZcadEntity    ' TODO: targetは型指定を要否を検討する
     ThisDrawing.Utility.GetEntity targetText, pickPoint, _
