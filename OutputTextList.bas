@@ -1,0 +1,200 @@
+Attribute VB_Name = "OutputTextList"
+Option Explicit
+
+'------------------------------------------------------------------------------
+' ## 出力ファイルのヘッダ
+'------------------------------------------------------------------------------
+Private Const OUTPUT_HEADER As String = _
+    """図題"",""画層"",""色"",""スタイル"",""内容""," _
+    & """文字高さ"",""X座標"",""Y座標"",""Z座標""" & vbCrLf
+
+'------------------------------------------------------------------------------
+' ## 文字オブジェクトのcsv出力プログラム   2020/07/26 G.O.
+'
+' 図題ごとに選択範囲の文字オブジェクトをcsv形式のリストで出力する
+' 出力する情報は画層,色,フォント,内容,高さ,座標
+'------------------------------------------------------------------------------
+Public Sub OutputTextList()
+    
+    On Error GoTo Error_Handler
+    
+    Dim outputFile As String
+    Dim outputData As String
+    Dim figureList() As String
+    Dim figureText As String
+    
+    ' 図題の選択
+    Dim targetFigure As ZcadEntity
+    Dim pickPoint As Variant
+    ThisDrawing.Utility.GetEntity targetFigure, pickPoint, _
+        "図題を選択 [Cancel(ESC)]"
+    Call CommonSub.ResetHighlight(targetFigure)
+    If Not CommonFunction.IsTextObject(targetFigure) Then
+        ThisDrawing.Utility.Prompt "エラー：文字を選択してください。" & vbCrLf
+        Exit Sub
+    End If
+    figureText = targetFigure.TextString
+    
+    ' 出力データヘッダ生成または図題重複回避処理
+    outputFile = CommonFunction.MakeFilePath("_テキストデータ", ".csv")
+    If Dir(outputFile) = "" Then
+        outputData = OUTPUT_HEADER
+    Else
+        Call makeFigureList(outputFile, figureList())
+        Call avoidDuplicateFigure(figureText, figureList())
+    End If
+    
+    ' 出力対象を範囲選択
+    Dim targetSelectionSet As ZcadSelectionSet
+    Set targetSelectionSet = ThisDrawing.SelectionSets.Add("NewSelectionSet")
+    targetSelectionSet.SelectOnScreen
+    
+    ' 出力データの作成
+    Call makeTextData(targetSelectionSet, figureText, outputData)
+    Call CommonSub.ReleaseSelectionSet(targetSelectionSet)
+    
+    ' 出力データの書き出し
+    Call outputCSV(outputFile, outputData)
+    ThisDrawing.Utility.Prompt "テキスト抽出が完了しました。" & vbCrLf
+    
+    Exit Sub
+    
+Error_Handler:
+    Call CommonSub.ReleaseSelectionSet(targetSelectionSet)
+    ThisDrawing.Utility.Prompt "エラー：コマンドを終了します。" & vbCrLf
+    
+End Sub
+
+'------------------------------------------------------------------------------
+' ## ヘッダ生成
+'------------------------------------------------------------------------------
+Private Sub makeHeader(ByRef output_data As String)
+    
+    output_data = """図題""," _
+                & """画層""," _
+                & """色""," _
+                & """スタイル""," _
+                & """内容""," _
+                & """文字高さ""," _
+                & """X座標""," _
+                & """Y座標""," _
+                & """Z座標""" & vbCrLf
+    
+End Sub
+
+'------------------------------------------------------------------------------
+' ## 図題リストの生成
+'------------------------------------------------------------------------------
+Private Sub makeFigureList(ByVal output_file As String, _
+                           ByRef figure_list() As String)
+    
+    Dim i As Long
+    Dim bufferData As String
+    
+    Open output_file For Input As #1
+        i = 0
+        Line Input #1, bufferData
+        Do Until EOF(1)
+            Line Input #1, bufferData
+            ReDim Preserve figure_list(0 To i)
+            figure_list(i) = Left(bufferData, InStr(bufferData, """,") - 1)
+            figure_list(i) = Right(figure_list(i), Len(figure_list(i)) - 1)
+            i = i + 1
+        Loop
+    Close #1
+    
+End Sub
+
+'------------------------------------------------------------------------------
+' ## 図題重複回避処理
+'------------------------------------------------------------------------------
+Private Sub avoidDuplicateFigure(ByRef figure_text As String, _
+                                 ByRef figure_list() As String)
+    
+    Dim i As Long
+    Dim buffer_text As String
+    
+    i = 1
+    buffer_text = figure_text
+    Do While CommonFunction.IsMatchList(figure_list, figure_text)
+        i = i + 1
+        figure_text = buffer_text & "(" & i & ")"
+    Loop
+    
+    ' 図題確認プロンプト
+    ThisDrawing.Utility.Prompt _
+        "図題は「" & figure_text & "」です。" & vbCrLf
+    ThisDrawing.Utility.Prompt _
+        "問題が無ければ出力範囲を選択してください。" & vbCrLf
+    
+End Sub
+
+'------------------------------------------------------------------------------
+' ## csv形式のデータ作成
+'------------------------------------------------------------------------------
+Private Sub makeTextData(ByVal target_selectionset As ZcadSelectionSet, _
+                         ByVal figure_text As String, _
+                         ByRef output_data As String)
+    
+    Dim extractEntity As ZcadEntity
+    Dim extractLayer As String
+    Dim extractColor As Long
+    Dim extractStyle As String
+    Dim extractText As String
+    Dim extractHeight As Double
+    Dim extractCoordinate As Variant
+    
+    ' 図題のcsv用文字列化
+    figure_text = formatString(figure_text)
+    
+    ' 文字列化およびcsv形式データ作成
+    For Each extractEntity In target_selectionset
+        If CommonFunction.IsTextObject(extractEntity) Then
+            
+            With extractEntity
+                extractLayer = formatString(.Layer)
+                extractColor = .TrueColor.ColorIndex
+                extractStyle = formatString(.StyleName)
+                extractText = formatString(.TextString)
+                extractHeight = .Height
+                extractCoordinate = .insertionPoint
+            End With
+            
+            output_data = output_data _
+                        & figure_text & "," _
+                        & extractLayer & "," _
+                        & extractColor & "," _
+                        & extractStyle & "," _
+                        & extractText & "," _
+                        & extractHeight & "," _
+                        & extractCoordinate(0) & "," _
+                        & extractCoordinate(1) & "," _
+                        & extractCoordinate(2) & vbCrLf
+            
+        End If
+    Next extractEntity
+    
+    ' 最終行の改行削除
+    output_data = Left(output_data, Len(output_data) - 2)
+    
+End Sub
+
+'------------------------------------------------------------------------------
+' ## csv用の文字列化(ダブルクォーテーションの付加)
+'------------------------------------------------------------------------------
+Private Function formatString(ByVal target_text As String) As String
+    
+    formatString = """" & Replace(target_text, """", """""") & """"
+    
+End Function
+
+'------------------------------------------------------------------------------
+' ## csvファイルへの出力
+'------------------------------------------------------------------------------
+Private Sub outputCSV(ByVal output_file As String, ByVal output_data As String)
+    
+    Open output_file For Append As #1
+    Print #1, output_data
+    Close #1
+    
+End Sub

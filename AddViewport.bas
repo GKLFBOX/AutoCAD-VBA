@@ -11,7 +11,7 @@ Public Sub AddViewport(ByVal frame_tag As String, _
                        ByVal viewport_layer As String, _
                        ByVal custom_scale As Single)
     
-    'On Error GoTo Error_Handler
+    On Error GoTo Error_Handler
     
     Dim LayoutFrame As ZcadBlockReference
     Dim minFramePoint As Variant, maxFramePoint As Variant

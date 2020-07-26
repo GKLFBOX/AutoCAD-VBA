@@ -97,7 +97,8 @@ Private Sub PrinterNameBox_Change()
     ' プリンタ名称の存在確認
     Dim printerList As Variant
     printerList = tempPlotConfig.GetPlotDeviceNames
-    If Not isValidSetting(printerList, PrinterNameBox.Value) Then Exit Sub
+    If Not CommonFunction.IsMatchList _
+        (printerList, PrinterNameBox.Value) Then Exit Sub
     
     ' 用紙設定呼び出しおよび補完
     Dim i As Long
@@ -114,24 +115,6 @@ Private Sub PrinterNameBox_Change()
 End Sub
 
 '------------------------------------------------------------------------------
-' ## 設定値存在確認
-'------------------------------------------------------------------------------
-Private Function isValidSetting(ByVal setting_list As Variant, _
-                                ByVal current_value As String) As Boolean
-    
-    isValidSetting = False
-    
-    Dim i As Long
-    For i = 0 To UBound(setting_list)
-        If current_value = setting_list(i) Then
-            isValidSetting = True
-            Exit Function
-        End If
-    Next i
-    
-End Function
-
-'------------------------------------------------------------------------------
 ' ## オフセット量入力ボタン
 '------------------------------------------------------------------------------
 Private Sub InputOffsetButton_Click()
@@ -144,7 +127,8 @@ Private Sub InputOffsetButton_Click()
     ' A3用紙設定の存在確認
     Dim paperList As Variant
     paperList = tempPlotConfig.GetCanonicalMediaNames
-    If Not isValidSetting(paperList, A3PaperBox.Value) Then Exit Sub
+    If Not CommonFunction.IsMatchList _
+        (paperList, A3PaperBox.Value) Then Exit Sub
     
     ' オフセット量入力(XYが一般と逆のため注意)
     ' 正しく値が取得できない用紙設定が存在するため注意
@@ -225,7 +209,7 @@ Private Function validateConfiguration() As Boolean
         ReDim Preserve layerList(i)
         layerList(i) = ThisDrawing.Layers.Item(i).Name
     Next i
-    If Not isValidSetting(layerList, LayoutLayerBox.Value) Then
+    If Not CommonFunction.IsMatchList(layerList, LayoutLayerBox.Value) Then
         MsgBox "レイアウト画層の入力が不正です。", vbCritical
         Exit Function
     End If
@@ -233,7 +217,7 @@ Private Function validateConfiguration() As Boolean
     ' 印刷スタイルの存在確認
     Dim styleList As Variant
     styleList = tempPlotConfig.GetPlotStyleTableNames
-    If Not isValidSetting(styleList, StyleNameBox.Value) Then
+    If Not CommonFunction.IsMatchList(styleList, StyleNameBox.Value) Then
         MsgBox "印刷スタイルの入力が不正です。", vbCritical
         Exit Function
     End If
@@ -241,7 +225,7 @@ Private Function validateConfiguration() As Boolean
     ' プリンタ名称の存在確認
     Dim printerList As Variant
     printerList = tempPlotConfig.GetPlotDeviceNames
-    If Not isValidSetting(printerList, PrinterNameBox.Value) Then
+    If Not CommonFunction.IsMatchList(printerList, PrinterNameBox.Value) Then
         MsgBox "プリンタ名称の入力が不正です。", vbCritical
         Exit Function
     End If
@@ -249,8 +233,8 @@ Private Function validateConfiguration() As Boolean
     ' A3用紙設定およびA4用紙設定の存在確認
     Dim paperList As Variant
     paperList = tempPlotConfig.GetCanonicalMediaNames
-    If Not isValidSetting(paperList, A3PaperBox.Value) _
-    Or Not isValidSetting(paperList, A4PaperBox.Value) Then
+    If Not CommonFunction.IsMatchList(paperList, A3PaperBox.Value) _
+    Or Not CommonFunction.IsMatchList(paperList, A4PaperBox.Value) Then
         MsgBox "用紙設定の入力が不正です。", vbCritical
         Exit Function
     End If
