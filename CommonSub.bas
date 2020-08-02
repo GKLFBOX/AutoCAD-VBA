@@ -24,14 +24,14 @@ End Sub
 '------------------------------------------------------------------------------
 Public Sub PickFrameBlock(ByRef frame_block As ZcadBlockReference)
     
-    Dim pickEntity As ZcadEntity
+    Dim targetEntity As ZcadEntity
     Dim pickPoint As Variant
     
-    ThisDrawing.Utility.GetEntity pickEntity, pickPoint, _
+    ThisDrawing.Utility.GetEntity targetEntity, pickPoint, _
         "枠ブロックを選択 [Cancel(ESC)]"
         
-    If TypeOf pickEntity Is ZcadBlockReference Then
-        Set frame_block = pickEntity
+    If TypeOf targetEntity Is ZcadBlockReference Then
+        Set frame_block = targetEntity
     Else
         ThisDrawing.Utility.Prompt "ブロック以外が選択されました。"
         Exit Sub

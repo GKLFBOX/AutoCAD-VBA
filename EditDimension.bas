@@ -29,7 +29,7 @@ Public Sub TurnRedDimension()
         For Each returnObject In targetSelectionSet
             If TypeOf returnObject Is ZcadDimension Then
                 returnObject.TextColor = zcByBlock
-                returnObject.color = zcRed  ' TODO: color‚ÍŽg‚¤‚×‚«‚Å‚È‚¢
+                returnObject.Color = zcRed  ' TODO: color‚ÍŽg‚¤‚×‚«‚Å‚È‚¢
             End If
         Next returnObject
         

@@ -164,15 +164,15 @@ Private Sub CreateLayoutButton_Click()
     
     ' 設定値保存準備
     configData = FrameTagBox.Value & vbCrLf _
-            & ScaleFactorBox.Value & vbCrLf _
-            & LayoutLayerBox.Value & vbCrLf _
-            & StyleNameBox.Value & vbCrLf _
-            & PrinterNameBox.Value & vbCrLf _
-            & A3PaperBox.Value & vbCrLf _
-            & A4PaperBox.Value & vbCrLf _
-            & OffsetXBox.Value & vbCrLf _
-            & OffsetYBox.Value & vbCrLf _
-            & CustomScaleBox.Value
+               & ScaleFactorBox.Value & vbCrLf _
+               & LayoutLayerBox.Value & vbCrLf _
+               & StyleNameBox.Value & vbCrLf _
+               & PrinterNameBox.Value & vbCrLf _
+               & A3PaperBox.Value & vbCrLf _
+               & A4PaperBox.Value & vbCrLf _
+               & OffsetXBox.Value & vbCrLf _
+               & OffsetYBox.Value & vbCrLf _
+               & CustomScaleBox.Value
     
     ' 設定フォルダの準備
     Call CommitConfig.PrepareConfigFolder
@@ -276,15 +276,15 @@ Private Sub AddViewportButton_Click()
     
     ' 設定値保存準備
     configData = FrameTagBox.Value & vbCrLf _
-            & ScaleFactorBox.Value & vbCrLf _
-            & LayoutLayerBox.Value & vbCrLf _
-            & StyleNameBox.Value & vbCrLf _
-            & PrinterNameBox.Value & vbCrLf _
-            & A3PaperBox.Value & vbCrLf _
-            & A4PaperBox.Value & vbCrLf _
-            & OffsetXBox.Value & vbCrLf _
-            & OffsetYBox.Value & vbCrLf _
-            & CustomScaleBox.Value
+               & ScaleFactorBox.Value & vbCrLf _
+               & LayoutLayerBox.Value & vbCrLf _
+               & StyleNameBox.Value & vbCrLf _
+               & PrinterNameBox.Value & vbCrLf _
+               & A3PaperBox.Value & vbCrLf _
+               & A4PaperBox.Value & vbCrLf _
+               & OffsetXBox.Value & vbCrLf _
+               & OffsetYBox.Value & vbCrLf _
+               & CustomScaleBox.Value
     
     ' 設定フォルダの準備
     Call CommitConfig.PrepareConfigFolder

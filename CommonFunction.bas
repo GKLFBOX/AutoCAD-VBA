@@ -8,8 +8,8 @@ Public Function IsTextObject(ByVal target_object As ZcadEntity) As Boolean
     
     IsTextObject = False
     
-    If (TypeOf target_object Is ZcadText) _
-    Or (TypeOf target_object Is ZcadMText) Then
+    If TypeOf target_object Is ZcadText _
+    Or TypeOf target_object Is ZcadMText Then
         IsTextObject = True
     End If
     
@@ -44,3 +44,19 @@ Public Function IsMatchList(ByVal target_list As Variant, _
     
 End Function
 
+'------------------------------------------------------------------------------
+' ## 配列版IsEmpty
+'------------------------------------------------------------------------------
+Public Function IsEmptyArray(ByRef confirmation_array As Variant) As Boolean
+    
+    On Error GoTo Error_Handler
+    
+    ' エラーまたは最大要素数が0未満の場合は空
+    IsEmptyArray = IIf(UBound(confirmation_array) < 0, True, False)
+    
+    Exit Function
+    
+Error_Handler:
+    IsEmptyArray = True
+    
+End Function

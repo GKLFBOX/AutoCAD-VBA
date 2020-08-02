@@ -1,11 +1,4 @@
 Attribute VB_Name = "DrawDoubleStrikethrough"
-'------------------------------------------------------------------------------
-' ## コーディングガイドライン
-'
-' [You.Activate|VBAコーディングガイドライン]に準拠する
-' (http://www.thom.jp/vbainfo/codingguideline.html)
-'
-'------------------------------------------------------------------------------
 Option Explicit
 
 '------------------------------------------------------------------------------
@@ -32,7 +25,7 @@ Public Sub DrawDoubleStrikethrough()
     ' 作図簡略化のために基点と角度を記憶し角度要素削除
     Dim targetPoint As Variant
     Dim targetAngle As Double
-    targetPoint = targetText.InsertionPoint
+    targetPoint = targetText.insertionPoint
     targetAngle = targetText.Rotation
     targetText.Rotate targetPoint, targetAngle * -1
     
