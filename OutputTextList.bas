@@ -2,13 +2,6 @@ Attribute VB_Name = "OutputTextList"
 Option Explicit
 
 '------------------------------------------------------------------------------
-' ## 出力ファイルのヘッダ
-'------------------------------------------------------------------------------
-Private Const OUTPUT_HEADER As String = _
-    """図題"",""画層"",""色"",""スタイル"",""内容""," _
-    & """文字高さ"",""X座標"",""Y座標"",""Z座標""" & vbCrLf
-
-'------------------------------------------------------------------------------
 ' ## 文字オブジェクトのcsv出力プログラム   2020/07/26 G.O.
 '
 ' 図題ごとに選択範囲の文字オブジェクトをcsv形式のリストで出力する
@@ -38,7 +31,7 @@ Public Sub OutputTextList()
     ' 出力データヘッダ生成または図題重複回避処理
     outputFile = CommonFunction.MakeFilePath("_テキストデータ", ".csv")
     If Dir(outputFile) = "" Then
-        outputData = OUTPUT_HEADER
+        outputData = makeHeader()
     Else
         Call makeFigureList(outputFile, figureList())
         Call avoidDuplicateFigure(figureText, figureList())
@@ -68,19 +61,19 @@ End Sub
 '------------------------------------------------------------------------------
 ' ## ヘッダ生成
 '------------------------------------------------------------------------------
-Private Sub makeHeader(ByRef output_data As String)
+Private Function makeHeader() As String
     
-    output_data = """図題""," _
-                & """画層""," _
-                & """色""," _
-                & """スタイル""," _
-                & """内容""," _
-                & """文字高さ""," _
-                & """X座標""," _
-                & """Y座標""," _
-                & """Z座標""" & vbCrLf
+    makeHeader = """図題""," _
+               & """画層""," _
+               & """色""," _
+               & """スタイル""," _
+               & """内容""," _
+               & """文字高さ""," _
+               & """X座標""," _
+               & """Y座標""," _
+               & """Z座標""" & vbCrLf
     
-End Sub
+End Function
 
 '------------------------------------------------------------------------------
 ' ## 図題リストの生成
@@ -118,7 +111,7 @@ Private Sub avoidDuplicateFigure(ByRef figure_text As String, _
     buffer_text = figure_text
     Do While CommonFunction.IsMatchList(figure_list, figure_text)
         i = i + 1
-        figure_text = buffer_text & "(" & i & ")"
+        figure_text = buffer_text & " (" & i & ")"
     Loop
     
     ' 図題確認プロンプト

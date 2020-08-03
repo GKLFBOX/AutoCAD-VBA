@@ -73,4 +73,3 @@ Public Sub SaveConfig(ByVal config_filename As String, _
     Close #1
     
 End Sub
-

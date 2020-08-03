@@ -2,7 +2,7 @@ Attribute VB_Name = "AlignTextGroupCenter"
 Option Explicit
 
 '------------------------------------------------------------------------------
-' ## 文字系オブジェクト位置調整
+' ## 文字系オブジェクト位置調整   2020/08/02 G.O.
 '
 ' 指定した2点とオフセット係数から文字系オブジェクトの位置を中央揃えに調整する
 '------------------------------------------------------------------------------
@@ -17,22 +17,24 @@ Public Sub AlignTextGroupCenter()
     ThisDrawing.Utility.GetEntity targetEntity, pickPoint, _
         "位置調整する文字またはブロック内文字を選択 [Cancel(ESC)]"
     
+    targetEntity.Highlight True
+    
     ' テキストまたはブロック参照の判定
     If CommonFunction.IsTextObject(targetEntity) Then
-        Call alignTextCenter(targetEntity)
-        Exit Sub
+        Call alignTextCenter(targetEntity, pickPoint)
     ElseIf TypeOf targetEntity Is ZcadBlockReference Then
         Call alignBlockCenter(targetEntity, pickPoint)
-        Exit Sub
     Else
         ThisDrawing.Utility.Prompt _
             "文字またはブロック内文字が選択されませんでした。" & vbCrLf
-        Exit Sub
     End If
+    
+    Call CommonSub.ResetHighlight(targetEntity)
     
     Exit Sub
     
 Error_Handler:
+    Call CommonSub.ResetHighlight(targetEntity)
     ThisDrawing.Utility.Prompt "なんらかのエラーです。" & vbCrLf
     
 End Sub
@@ -40,23 +42,23 @@ End Sub
 '------------------------------------------------------------------------------
 ' ## 文字位置調整
 '------------------------------------------------------------------------------
-Private Sub alignTextCenter(ByRef target_text As ZcadEntity)
+Private Sub alignTextCenter(ByRef target_text As ZcadEntity, _
+                            ByVal pick_point As Variant)
     
     On Error GoTo Error_Handler
     
-    Dim firstPoint As Variant
-    Dim secondPoint As Variant
+    Dim firstPoint As Variant, secondPoint As Variant
     Dim offsetFactor As String
     Dim underFlag As String
     Dim textCenter() As Double
-    
-    target_text.Highlight True
     
     ' 調整値のユーザー入力
     Call inputAlignValue(firstPoint, secondPoint, offsetFactor, underFlag)
     
     ' オフセット計算簡略化のため角度要素削除
-    target_text.Rotation = 0
+    Dim targetAngle As Double
+    targetAngle = target_text.Rotation
+    target_text.Rotate pick_point, targetAngle * -1
     
     ' 文字の上下中心取得および取得位置のオフセット
     textCenter = getTextCenter(target_text, underFlag)
@@ -65,12 +67,9 @@ Private Sub alignTextCenter(ByRef target_text As ZcadEntity)
     ' 文字位置調整の実行
     Call doAlignment(firstPoint, secondPoint, textCenter, target_text)
     
-    Call CommonSub.ResetHighlight(target_text)
-    
     Exit Sub
     
 Error_Handler:
-    Call CommonSub.ResetHighlight(target_text)
     ThisDrawing.Utility.Prompt "なんらかのエラーです。" & vbCrLf
     
 End Sub
@@ -85,29 +84,26 @@ Private Sub alignBlockCenter(ByRef target_block As ZcadBlockReference, _
     
     Dim replicaEntities As Variant
     Dim targetReplica As ZcadEntity
-    Dim firstPoint As Variant
-    Dim secondPoint As Variant
+    Dim firstPoint As Variant, secondPoint As Variant
     Dim offsetFactor As String
     Dim underFlag As String
     Dim textCenter() As Double
     
-    target_block.Highlight True
-    
     replicaEntities = target_block.Explode
     
     ' 分解オブジェクトの属性定義名称置換
-    Call replaceAttributeTag(target_block, replicaEntities)
+    Call CommonSub.ReplaceAttributeTag(target_block, replicaEntities)
     
     ' 指定点の分解オブジェクトを取得
-    Call grabReplicaEntity(pick_point, targetReplica)
+    Call CommonSub.GrabReplicaEntity(pick_point, targetReplica)
     
     ' 画面上では分解オブジェクトを非表示化
-    Call hideReplica(replicaEntities)
+    Call CommonSub.HideReplica(replicaEntities)
     
+    ' テキスト内文字の判定
     If Not CommonFunction.IsTextObject(targetReplica) _
     And Not TypeOf targetReplica Is ZcadAttribute Then
-        Call deleteReplica(replicaEntities)
-        Call CommonSub.ResetHighlight(target_block)
+        Call CommonSub.DeleteReplica(replicaEntities)
         ThisDrawing.Utility.Prompt _
             "ブロック内文字が選択されませんでした。" & vbCrLf
         Exit Sub
@@ -117,10 +113,10 @@ Private Sub alignBlockCenter(ByRef target_block As ZcadBlockReference, _
     Call inputAlignValue(firstPoint, secondPoint, offsetFactor, underFlag)
     
     ' オフセット計算簡略化のため角度要素削除
-    Dim reverseRadian As Double
-    reverseRadian = targetReplica.Rotation * -1
-    targetReplica.Rotate pick_point, reverseRadian
-    target_block.Rotate pick_point, reverseRadian
+    Dim targetAngle As Double
+    targetAngle = targetReplica.Rotation
+    targetReplica.Rotate pick_point, targetAngle * -1
+    target_block.Rotate pick_point, targetAngle * -1
     
     ' 文字の上下中心取得および取得位置のオフセット
     textCenter = getTextCenter(targetReplica, underFlag)
@@ -129,99 +125,13 @@ Private Sub alignBlockCenter(ByRef target_block As ZcadBlockReference, _
     ' 文字位置調整の実行
     Call doAlignment(firstPoint, secondPoint, textCenter, target_block)
     
-    Call deleteReplica(replicaEntities)
-    Call CommonSub.ResetHighlight(target_block)
+    Call CommonSub.DeleteReplica(replicaEntities)
     
     Exit Sub
     
 Error_Handler:
-    Call deleteReplica(replicaEntities)
-    Call CommonSub.ResetHighlight(target_block)
+    Call CommonSub.DeleteReplica(replicaEntities)
     ThisDrawing.Utility.Prompt "なんらかのエラーです。" & vbCrLf
-    
-End Sub
-
-'------------------------------------------------------------------------------
-' ## 分解オブジェクトの属性定義名称置換
-'------------------------------------------------------------------------------
-Private Sub replaceAttributeTag(ByRef target_block As ZcadBlockReference, _
-                                ByVal replica_entities As Variant)
-    
-    Dim targetAttributes As Variant
-    
-    ' 属性取得および有無確認
-    targetAttributes = target_block.GetAttributes
-    If CommonFunction.IsEmptyArray(targetAttributes) Then Exit Sub
-    
-    ' 分解オブジェクトの属性定義を検索
-    Dim i As Long, j As Long
-    Dim currentReplica As ZcadEntity
-    Dim currentAttribute As ZcadAttributeReference
-    For i = 0 To UBound(replica_entities)
-        
-        Set currentReplica = replica_entities(i)
-        If Not TypeOf currentReplica Is ZcadAttribute Then _
-            GoTo Continue_i
-        
-        ' 画面表示上の属性定義名称をブロックの対応する属性値に置換
-        For j = 0 To UBound(targetAttributes)
-            Set currentAttribute = targetAttributes(j)
-            If currentAttribute.TagString = currentReplica.TagString Then
-                currentReplica.TagString = currentAttribute.TextString
-                Exit For
-            End If
-        Next j
-        
-Continue_i:
-    
-    Next i
-    
-End Sub
-
-'------------------------------------------------------------------------------
-' ## 指定点の分解オブジェクト取得
-'------------------------------------------------------------------------------
-Private Sub grabReplicaEntity(ByVal pick_point As Variant, _
-                              ByRef target_replica As ZcadEntity)
-    
-    Dim replicaSelectionSet As ZcadSelectionSet
-    
-    Set replicaSelectionSet = ThisDrawing.SelectionSets.Add("NewSelectionSet")
-    
-    replicaSelectionSet.SelectAtPoint pick_point
-    Set target_replica = replicaSelectionSet.Item(0)
-    
-    Call CommonSub.ReleaseSelectionSet(replicaSelectionSet)
-    
-End Sub
-
-'------------------------------------------------------------------------------
-' ## 分解オブジェクトの非表示
-'------------------------------------------------------------------------------
-Private Sub hideReplica(ByVal replica_entities As Variant)
-    
-    Dim i As Long
-    Dim targetReplica As ZcadEntity
-    
-    For i = 0 To UBound(replica_entities)
-        Set targetReplica = replica_entities(i)
-        targetReplica.Visible = False
-    Next i
-    
-End Sub
-
-'------------------------------------------------------------------------------
-' ## 分解オブジェクトの削除
-'------------------------------------------------------------------------------
-Private Sub deleteReplica(ByVal replica_entities As Variant)
-    
-    Dim i As Long
-    Dim targetReplica As ZcadEntity
-    
-    For i = 0 To UBound(replica_entities)
-        Set targetReplica = replica_entities(i)
-        targetReplica.Delete
-    Next i
     
 End Sub
 
@@ -264,19 +174,8 @@ Private Function getTextCenter(ByVal target_text As ZcadEntity, _
     
     target_text.GetBoundingBox minExtent, maxExtent
     
-    ' ZWCAD2020ではGetBondingBoxが文字の傾斜角度を無視してしまうため
-    ' 斜体文字を考慮し傾斜角度からMaxPointを最適化する
-    Dim textOblique As Double
-    Dim deltaX As Double
-    Dim deltaY As Double
-    textOblique = target_text.ObliqueAngle
-    deltaY = maxExtent(1) - minExtent(1)
-    deltaX = deltaY * Tan(textOblique)
-    If textOblique > 0 Then
-        maxExtent(0) = maxExtent(0) + deltaX
-    ElseIf textOblique < 0 Then
-        minExtent(0) = minExtent(0) - deltaX
-    End If
+    ' 拡張版GetBoundingBox
+    Call CommonSub.GetEnhancedBoundingBox(target_text, minExtent, maxExtent)
     
     ' 上境界または下境界の取得
     If UCase(under_flag) = "Y" Then

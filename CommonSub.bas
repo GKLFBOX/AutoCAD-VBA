@@ -157,3 +157,110 @@ Public Sub ApplyViewportProperty(ByRef target_viewport As ZcadPViewport, _
     
 End Sub
 
+'------------------------------------------------------------------------------
+' ## 分解オブジェクトの属性定義名称置換
+'------------------------------------------------------------------------------
+Public Sub ReplaceAttributeTag(ByRef target_block As ZcadBlockReference, _
+                               ByVal replica_entities As Variant)
+    
+    Dim targetAttributes As Variant
+    
+    ' 属性取得および有無確認
+    targetAttributes = target_block.GetAttributes
+    If CommonFunction.IsEmptyArray(targetAttributes) Then Exit Sub
+    
+    ' 分解オブジェクトの属性定義を検索
+    Dim i As Long, j As Long
+    Dim currentReplica As ZcadEntity
+    Dim currentAttribute As ZcadAttributeReference
+    For i = 0 To UBound(replica_entities)
+        
+        Set currentReplica = replica_entities(i)
+        If Not TypeOf currentReplica Is ZcadAttribute Then _
+            GoTo Continue_i
+        
+        ' 画面表示上の属性定義名称をブロックの対応する属性値に置換
+        For j = 0 To UBound(targetAttributes)
+            Set currentAttribute = targetAttributes(j)
+            If currentAttribute.TagString = currentReplica.TagString Then
+                currentReplica.TagString = currentAttribute.TextString
+                Exit For
+            End If
+        Next j
+        
+Continue_i:
+    
+    Next i
+    
+End Sub
+
+'------------------------------------------------------------------------------
+' ## 指定点の分解オブジェクト取得
+'------------------------------------------------------------------------------
+Public Sub GrabReplicaEntity(ByVal pick_point As Variant, _
+                             ByRef target_replica As ZcadEntity)
+    
+    Dim replicaSelectionSet As ZcadSelectionSet
+    
+    Set replicaSelectionSet = ThisDrawing.SelectionSets.Add("NewSelectionSet")
+    
+    replicaSelectionSet.SelectAtPoint pick_point
+    Set target_replica = replicaSelectionSet.Item(0)
+    
+    Call CommonSub.ReleaseSelectionSet(replicaSelectionSet)
+    
+End Sub
+
+'------------------------------------------------------------------------------
+' ## 分解オブジェクトの非表示
+'------------------------------------------------------------------------------
+Public Sub HideReplica(ByVal replica_entities As Variant)
+    
+    Dim i As Long
+    Dim targetReplica As ZcadEntity
+    
+    For i = 0 To UBound(replica_entities)
+        Set targetReplica = replica_entities(i)
+        targetReplica.Visible = False
+    Next i
+    
+End Sub
+
+'------------------------------------------------------------------------------
+' ## 分解オブジェクトの削除
+'------------------------------------------------------------------------------
+Public Sub DeleteReplica(ByVal replica_entities As Variant)
+    
+    Dim i As Long
+    Dim targetReplica As ZcadEntity
+    
+    For i = 0 To UBound(replica_entities)
+        Set targetReplica = replica_entities(i)
+        targetReplica.Delete
+    Next i
+    
+End Sub
+
+'------------------------------------------------------------------------------
+' ## 拡張版(ZWCAD2020斜体文字対応版)GetBoundingBox
+'------------------------------------------------------------------------------
+Public Sub GetEnhancedBoundingBox(ByVal target_text As ZcadEntity, _
+                                  ByRef min_extent As Variant, _
+                                  ByRef max_extent As Variant)
+    
+    target_text.GetBoundingBox min_extent, max_extent
+    
+    ' ZWCAD2020ではGetBondingBoxが文字の傾斜角度を無視してしまうため
+    ' 斜体の文字を考慮し傾斜角度からMinPointまたはMaxPointを最適化する
+    Dim textOblique As Double
+    Dim deltaX As Double, deltaY As Double
+    textOblique = target_text.ObliqueAngle
+    deltaY = max_extent(1) - min_extent(1)
+    deltaX = deltaY * Tan(textOblique)
+    If textOblique > 0 Then
+        max_extent(0) = max_extent(0) + deltaX
+    ElseIf textOblique < 0 Then
+        min_extent(0) = min_extent(0) - deltaX
+    End If
+    
+End Sub

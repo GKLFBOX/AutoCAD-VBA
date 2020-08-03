@@ -19,11 +19,10 @@ Public Sub DisplayLayoutForm()
 End Sub
 
 '------------------------------------------------------------------------------
-' ## レイアウト編集フォーム表示
+' ## 文字装飾設定フォーム表示
 '------------------------------------------------------------------------------
 Public Sub DisplayDecorationLineForm()
     
-    ' モードレス表示はフォーカスが取れないため使用していない
     Load DecorationLineForm
     DecorationLineForm.Show
     
