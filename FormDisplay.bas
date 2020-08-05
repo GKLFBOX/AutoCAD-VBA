@@ -27,3 +27,13 @@ Public Sub DisplayDecorationLineForm()
     DecorationLineForm.Show
     
 End Sub
+
+'------------------------------------------------------------------------------
+' ## 用紙枠リストcsv出力フォーム表示
+'------------------------------------------------------------------------------
+Public Sub DisplayFrameListForm()
+    
+    Load FrameListForm
+    FrameListForm.Show
+    
+End Sub

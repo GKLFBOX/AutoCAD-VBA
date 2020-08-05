@@ -60,3 +60,12 @@ Error_Handler:
     IsEmptyArray = True
     
 End Function
+
+'------------------------------------------------------------------------------
+' ## csv用の文字列化(ダブルクォーテーションの付加)
+'------------------------------------------------------------------------------
+Public Function FormatString(ByVal target_text As String) As String
+    
+    FormatString = """" & Replace(target_text, """", """""") & """"
+    
+End Function

@@ -23,10 +23,12 @@ Public Sub OutputTextList()
         "図題を選択 [Cancel(ESC)]"
     Call CommonSub.ResetHighlight(targetFigure)
     If Not CommonFunction.IsTextObject(targetFigure) Then
-        ThisDrawing.Utility.Prompt "エラー：文字を選択してください。" & vbCrLf
+        ThisDrawing.Utility.Prompt "文字が選択されませんでした。" & vbCrLf
         Exit Sub
     End If
+    
     figureText = targetFigure.TextString
+    ReDim Preserve figureList(0)
     
     ' 出力データヘッダ生成または図題重複回避処理
     outputFile = CommonFunction.MakeFilePath("_テキストデータ", ".csv")
@@ -34,27 +36,31 @@ Public Sub OutputTextList()
         outputData = makeHeader()
     Else
         Call makeFigureList(outputFile, figureList())
-        Call avoidDuplicateFigure(figureText, figureList())
     End If
+    
+    Call avoidDuplicateFigure(figureText, figureList())
     
     ' 出力対象を範囲選択
     Dim targetSelectionSet As ZcadSelectionSet
     Set targetSelectionSet = ThisDrawing.SelectionSets.Add("NewSelectionSet")
     targetSelectionSet.SelectOnScreen
     
-    ' 出力データの作成
+    ' 出力データの作成および書き出し
     Call makeTextData(targetSelectionSet, figureText, outputData)
-    Call CommonSub.ReleaseSelectionSet(targetSelectionSet)
+    If outputData = "" Then
+        ThisDrawing.Utility.Prompt "テキストが選択されませんでした。" & vbCrLf
+    Else
+        Call CommonSub.OutputCSV(outputFile, outputData)
+        ThisDrawing.Utility.Prompt "テキスト抽出が完了しました。" & vbCrLf
+    End If
     
-    ' 出力データの書き出し
-    Call outputCSV(outputFile, outputData)
-    ThisDrawing.Utility.Prompt "テキスト抽出が完了しました。" & vbCrLf
+    Call CommonSub.ReleaseSelectionSet(targetSelectionSet)
     
     Exit Sub
     
 Error_Handler:
     Call CommonSub.ReleaseSelectionSet(targetSelectionSet)
-    ThisDrawing.Utility.Prompt "エラー：コマンドを終了します。" & vbCrLf
+    ThisDrawing.Utility.Prompt "なんらかのエラーです。" & vbCrLf
     
 End Sub
 
@@ -129,6 +135,7 @@ Private Sub makeTextData(ByVal target_selectionset As ZcadSelectionSet, _
                          ByVal figure_text As String, _
                          ByRef output_data As String)
     
+    Dim bufferData As String
     Dim extractEntity As ZcadEntity
     Dim extractLayer As String
     Dim extractColor As Long
@@ -137,18 +144,22 @@ Private Sub makeTextData(ByVal target_selectionset As ZcadSelectionSet, _
     Dim extractHeight As Double
     Dim extractCoordinate As Variant
     
+    ' データ作成前の値を保存
+    bufferData = output_data
+    
     ' 図題のcsv用文字列化
-    figure_text = formatString(figure_text)
+    figure_text = CommonFunction.FormatString(figure_text)
     
     ' 文字列化およびcsv形式データ作成
     For Each extractEntity In target_selectionset
+        
         If CommonFunction.IsTextObject(extractEntity) Then
             
             With extractEntity
-                extractLayer = formatString(.Layer)
+                extractLayer = CommonFunction.FormatString(.Layer)
                 extractColor = .TrueColor.ColorIndex
-                extractStyle = formatString(.StyleName)
-                extractText = formatString(.TextString)
+                extractStyle = CommonFunction.FormatString(.StyleName)
+                extractText = CommonFunction.FormatString(.TextString)
                 extractHeight = .Height
                 extractCoordinate = .insertionPoint
             End With
@@ -165,29 +176,16 @@ Private Sub makeTextData(ByVal target_selectionset As ZcadSelectionSet, _
                         & extractCoordinate(2) & vbCrLf
             
         End If
+        
     Next extractEntity
+    
+    ' データに変更がない場合は値を削除
+    If bufferData = output_data Then
+        output_data = ""
+        Exit Sub
+    End If
     
     ' 最終行の改行削除
     output_data = Left(output_data, Len(output_data) - 2)
-    
-End Sub
-
-'------------------------------------------------------------------------------
-' ## csv用の文字列化(ダブルクォーテーションの付加)
-'------------------------------------------------------------------------------
-Private Function formatString(ByVal target_text As String) As String
-    
-    formatString = """" & Replace(target_text, """", """""") & """"
-    
-End Function
-
-'------------------------------------------------------------------------------
-' ## csvファイルへの出力
-'------------------------------------------------------------------------------
-Private Sub outputCSV(ByVal output_file As String, ByVal output_data As String)
-    
-    Open output_file For Append As #1
-    Print #1, output_data
-    Close #1
     
 End Sub

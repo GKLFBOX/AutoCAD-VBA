@@ -94,7 +94,7 @@ Public Sub FetchCorrectSize(ByVal frame_block As ZcadBlockReference, _
         If TypeOf extractEntity Is ZcadAttribute Then GoTo Continue_i
         
         ' 比較更新を行い最外周サイズを取得する
-        If IsEmpty(min_framepoint) And IsEmpty(max_framepoint) Then
+        If IsEmpty(currentMin) And IsEmpty(currentMax) Then
             extractEntity.GetBoundingBox min_framepoint, max_framepoint
         Else
             extractEntity.GetBoundingBox currentMin, currentMax
@@ -262,5 +262,16 @@ Public Sub GetEnhancedBoundingBox(ByVal target_text As ZcadEntity, _
     ElseIf textOblique < 0 Then
         min_extent(0) = min_extent(0) - deltaX
     End If
+    
+End Sub
+
+'------------------------------------------------------------------------------
+' ## csvファイルへの出力
+'------------------------------------------------------------------------------
+Public Sub OutputCSV(ByVal output_file As String, ByVal output_data As String)
+    
+    Open output_file For Append As #1
+    Print #1, output_data
+    Close #1
     
 End Sub

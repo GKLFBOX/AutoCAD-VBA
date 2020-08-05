@@ -133,7 +133,7 @@ Private Sub addBlockStrikethrough(ByRef target_block As ZcadBlockReference, _
     End If
     
     ' ì}ŠÈ—ª‰»‚Ì‚½‚ß‚ÉŠî“_‚ÆŠp“x‚ğ‹L‰¯‚µŠp“x—v‘fíœ
-    targetAngle = target_block.Rotation
+    targetAngle = targetReplica.Rotation
     targetReplica.Rotate pick_point, targetAngle * -1
     target_block.Rotate pick_point, targetAngle * -1
     
@@ -215,10 +215,11 @@ Private Sub applyDrawingConfig(ByRef target_text As ZcadEntity, _
                                ByVal config_red As Boolean, _
                                ByVal config_targetlayer As Boolean)
     
-    ' ì}‰æ‘w‚Ì“K—p
+    ' ì}‰æ‘w‚Ì“K—p‚¨‚æ‚Ñæ‚èÁ‚µ‘ÎÛ‰æ‘w•ÏX‚Ì“K—p
     If config_layeron Then
         strike_through1.Layer = config_layer
         strike_through2.Layer = config_layer
+        If config_targetlayer Then target_text.Layer = config_layer
     Else
         strike_through1.Layer = target_text.Layer
         strike_through2.Layer = target_text.Layer
@@ -232,8 +233,5 @@ Private Sub applyDrawingConfig(ByRef target_text As ZcadEntity, _
         strike_through1.TrueColor = changeColor
         strike_through2.TrueColor = changeColor
     End If
-    
-    ' æ‚èÁ‚µ‘ÎÛ‰æ‘w‚Ì“K—p
-    If config_targetlayer Then target_text.Layer = config_layer
     
 End Sub

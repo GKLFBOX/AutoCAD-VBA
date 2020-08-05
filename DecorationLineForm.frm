@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} DecorationLineForm 
    Caption         =   "文字装飾線設定"
-   ClientHeight    =   5565
+   ClientHeight    =   5790
    ClientLeft      =   45
    ClientTop       =   390
    ClientWidth     =   4665
@@ -23,6 +23,10 @@ Private Sub UserForm_Initialize()
     Dim i As Long
     Dim configData As Variant
     
+    ' オプションボタン初期化
+    ReferenceLineLayerOffButton.Value = True
+    StrikethroughLayerOffButton.Value = True
+    
     ' 参照線作図設定レイヤー名称呼び出し
     For i = 0 To ThisDrawing.Layers.Count - 1
         ReferenceLineLayerBox.AddItem ThisDrawing.Layers.Item(i).Name
@@ -37,7 +41,8 @@ Private Sub UserForm_Initialize()
     configData = Split(CommitConfig.LoadConfig _
         (FormDisplay.REFERENCELINE_CONFIG), vbCrLf)
     If UBound(configData) = 3 Then
-        ReferenceLineLayerOnBox.Value = configData(0)
+        ReferenceLineLayerOnButton.Value = _
+            IIf(configData(0) = "True", "True", "False")
         ReferenceLineLayerBox.Value = configData(1)
         ReferenceLineLengthBox.Value = configData(2)
         ReferenceLineOffsetBox.Value = configData(3)
@@ -47,7 +52,7 @@ Private Sub UserForm_Initialize()
     configData = Split(CommitConfig.LoadConfig _
         (FormDisplay.STRIKETHROUGH_CONFIG), vbCrLf)
     If UBound(configData) = 4 Then
-        StrikethroughLayerOnBox.Value = _
+        StrikethroughLayerOnButton.Value = _
             IIf(configData(0) = "True", "True", "False")
         StrikethroughLayerBox.Value = configData(1)
         StrikethroughLengthBox.Value = configData(2)
@@ -58,27 +63,19 @@ Private Sub UserForm_Initialize()
     End If
     
     ' 参照線作図画層の指定切り替え
-    If ReferenceLineLayerOnBox.Value Then
-        ReferenceLineLayerBox.Enabled = True
-    Else
-        ReferenceLineLayerBox.Enabled = False
-    End If
+    Call ReferenceLineLayerOnButton_Change
     
     ' 取り消し線作図画層の指定切り替え
-    If StrikethroughLayerOnBox.Value Then
-        StrikethroughLayerBox.Enabled = True
-    Else
-        StrikethroughLayerBox.Enabled = False
-    End If
+    Call StrikethroughLayerOnButton_Change
     
 End Sub
 
 '------------------------------------------------------------------------------
 ' ## 参照線作図画層の指定切り替え
 '------------------------------------------------------------------------------
-Private Sub ReferenceLineLayerOnBox_Change()
+Private Sub ReferenceLineLayerOnButton_Change()
     
-    If ReferenceLineLayerOnBox.Value Then
+    If ReferenceLineLayerOnButton.Value Then
         ReferenceLineLayerBox.Enabled = True
     Else
         ReferenceLineLayerBox.Enabled = False
@@ -89,11 +86,14 @@ End Sub
 '------------------------------------------------------------------------------
 ' ## 取り消し線作図画層の指定切り替え
 '------------------------------------------------------------------------------
-Private Sub StrikethroughLayerOnBox_Change()
+Private Sub StrikethroughLayerOnButton_Change()
     
-    If StrikethroughLayerOnBox.Value Then
+    If StrikethroughLayerOnButton.Value Then
+        TargetEntityLayerBox.Enabled = True
         StrikethroughLayerBox.Enabled = True
     Else
+        TargetEntityLayerBox.Value = False
+        TargetEntityLayerBox.Enabled = False
         StrikethroughLayerBox.Enabled = False
     End If
     
@@ -107,13 +107,13 @@ Private Sub DecorationSaveButton_Click()
     Dim configData As Variant
     
     ' 設定値入力の確認
-    If Not validateDecorationConfign() Then Exit Sub
+    If Not validateDecorationConfig() Then Exit Sub
     
     ' 設定フォルダの準備
     Call CommitConfig.PrepareConfigFolder
     
     ' 参照線作図設定値保存
-    configData = ReferenceLineLayerOnBox.Value & vbCrLf _
+    configData = ReferenceLineLayerOnButton.Value & vbCrLf _
                & ReferenceLineLayerBox.Value & vbCrLf _
                & ReferenceLineLengthBox.Value & vbCrLf _
                & ReferenceLineOffsetBox.Value
@@ -122,7 +122,7 @@ Private Sub DecorationSaveButton_Click()
         (FormDisplay.REFERENCELINE_CONFIG, configData)
     
     ' 取消線作図設定値保存
-    configData = StrikethroughLayerOnBox.Value & vbCrLf _
+    configData = StrikethroughLayerOnButton.Value & vbCrLf _
                & StrikethroughLayerBox.Value & vbCrLf _
                & StrikethroughLengthBox.Value & vbCrLf _
                & StrikethroughRedBox.Value & vbCrLf _
@@ -136,9 +136,9 @@ End Sub
 '------------------------------------------------------------------------------
 ' ## 設定値入力の確認
 '------------------------------------------------------------------------------
-Private Function validateDecorationConfign() As Boolean
+Private Function validateDecorationConfig() As Boolean
     
-    validateDecorationConfign = False
+    validateDecorationConfig = False
     
     ' 画層リスト取得
     Dim i As Long
@@ -149,7 +149,7 @@ Private Function validateDecorationConfign() As Boolean
     Next i
     
     ' 参照線作図画層入力確認
-    If ReferenceLineLayerOnBox.Value _
+    If ReferenceLineLayerOnButton.Value _
     And Not CommonFunction.IsMatchList _
         (layerList, ReferenceLineLayerBox.Value) Then
         MsgBox "参照線作図画層の入力が不正です。", vbCritical
@@ -169,7 +169,7 @@ Private Function validateDecorationConfign() As Boolean
     End If
     
     ' 取消線作図画層入力確認
-    If StrikethroughLayerOnBox.Value _
+    If StrikethroughLayerOnButton.Value _
     And Not CommonFunction.IsMatchList _
         (layerList, StrikethroughLayerBox.Value) Then
         MsgBox "取り消し線作図画層の入力が不正です。", vbCritical
@@ -182,6 +182,6 @@ Private Function validateDecorationConfign() As Boolean
         Exit Function
     End If
     
-    validateDecorationConfign = True
+    validateDecorationConfig = True
     
 End Function

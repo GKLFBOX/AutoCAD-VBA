@@ -125,7 +125,7 @@ Private Sub addBlockReferenceLine(ByRef target_block As ZcadBlockReference, _
     End If
     
     ' ì}ŠÈ—ª‰»‚Ì‚½‚ß‚ÉŠî“_‚ÆŠp“x‚ğ‹L‰¯‚µŠp“x—v‘fíœ
-    targetAngle = target_block.Rotation
+    targetAngle = targetReplica.Rotation
     targetReplica.Rotate pick_point, targetAngle * -1
     target_block.Rotate pick_point, targetAngle * -1
     
