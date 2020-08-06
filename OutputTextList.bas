@@ -147,45 +147,42 @@ Private Sub makeTextData(ByVal target_selectionset As ZcadSelectionSet, _
     ' データ作成前の値を保存
     bufferData = output_data
     
-    ' 図題のcsv用文字列化
-    figure_text = CommonFunction.FormatString(figure_text)
-    
     ' 文字列化およびcsv形式データ作成
+    figure_text = CommonFunction.FormatString(figure_text)
     For Each extractEntity In target_selectionset
         
-        If CommonFunction.IsTextObject(extractEntity) Then
+        If Not CommonFunction.IsTextObject(extractEntity) Then _
+            GoTo Continue_extractEntity
             
-            With extractEntity
-                extractLayer = CommonFunction.FormatString(.Layer)
-                extractColor = .TrueColor.ColorIndex
-                extractStyle = CommonFunction.FormatString(.StyleName)
-                extractText = CommonFunction.FormatString(.TextString)
-                extractHeight = .Height
-                extractCoordinate = .insertionPoint
-            End With
-            
-            output_data = output_data _
-                        & figure_text & "," _
-                        & extractLayer & "," _
-                        & extractColor & "," _
-                        & extractStyle & "," _
-                        & extractText & "," _
-                        & extractHeight & "," _
-                        & extractCoordinate(0) & "," _
-                        & extractCoordinate(1) & "," _
-                        & extractCoordinate(2) & vbCrLf
-            
-        End If
+        With extractEntity
+            extractLayer = CommonFunction.FormatString(.Layer)
+            extractColor = .TrueColor.ColorIndex
+            extractStyle = CommonFunction.FormatString(.StyleName)
+            extractText = CommonFunction.FormatString(.TextString)
+            extractHeight = .Height
+            extractCoordinate = .insertionPoint
+        End With
+        
+        output_data = output_data _
+                    & figure_text & "," _
+                    & extractLayer & "," _
+                    & extractColor & "," _
+                    & extractStyle & "," _
+                    & extractText & "," _
+                    & extractHeight & "," _
+                    & extractCoordinate(0) & "," _
+                    & extractCoordinate(1) & "," _
+                    & extractCoordinate(2) & vbCrLf
+        
+Continue_extractEntity:
         
     Next extractEntity
     
-    ' データに変更がない場合は値を削除
+    ' 値の削除または最終行の改行削除
     If bufferData = output_data Then
         output_data = ""
-        Exit Sub
+    Else
+        output_data = Left(output_data, Len(output_data) - 2)
     End If
-    
-    ' 最終行の改行削除
-    output_data = Left(output_data, Len(output_data) - 2)
     
 End Sub

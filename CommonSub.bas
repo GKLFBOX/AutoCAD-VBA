@@ -94,7 +94,8 @@ Public Sub FetchCorrectSize(ByVal frame_block As ZcadBlockReference, _
         If TypeOf extractEntity Is ZcadAttribute Then GoTo Continue_i
         
         ' 比較更新を行い最外周サイズを取得する
-        If IsEmpty(currentMin) And IsEmpty(currentMax) Then
+        If CommonFunction.IsEmptyArray(min_framepoint) _
+        And CommonFunction.IsEmptyArray(max_framepoint) Then
             extractEntity.GetBoundingBox min_framepoint, max_framepoint
         Else
             extractEntity.GetBoundingBox currentMin, currentMax

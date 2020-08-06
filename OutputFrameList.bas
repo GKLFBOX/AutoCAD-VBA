@@ -25,7 +25,7 @@ Public Sub OutputFrameList(ByVal frame_blockname As String, _
     
     ' 出力対象を範囲選択
     Dim targetSelectionSet As ZcadSelectionSet
-    Set targetSelectionSet = ThisDrawing.SelectionSets.Add("NewSelectionSet5")
+    Set targetSelectionSet = ThisDrawing.SelectionSets.Add("NewSelectionSet")
     targetSelectionSet.SelectOnScreen
     
     ' 出力データの作成および書き出し
@@ -87,56 +87,47 @@ Private Sub makeFrameData(ByVal target_selectionset As ZcadSelectionSet, _
     ' 文字列化およびcsv形式データ作成
     For Each extractEntity In target_selectionset
         
-        ' ブロックでない場合はスキップ
-        If TypeOf extractEntity Is ZcadBlockReference Then
-            Set extractBlock = extractEntity
-        Else
+        ' 指定ブロックでない場合はスキップ
+        If Not TypeOf extractEntity Is ZcadBlockReference Then _
             GoTo Continue_extractEntity
-        End If
         
-        ' 用紙枠ブロック名照合
-        If extractBlock.Name = frame_blockname Then
-            
-            ' ページ番号取得
-            Call CommonSub.FetchFrameName _
-                (extractBlock, frame_tag, extractPageNo)
-            
-            ' 座標取得
-            Call CommonSub.FetchCorrectSize _
-                (extractBlock, extractMinPoint, extractMaxPoint)
-            
-            extractPageNo = CommonFunction.FormatString(extractPageNo)
-            extractLayer = CommonFunction.FormatString(extractBlock.Layer)
-            extractColor = extractBlock.TrueColor.ColorIndex
-            
-            output_data = output_data _
-                        & extractPageNo & "," _
-                        & extractLayer & "," _
-                        & extractColor & "," _
-                        & extractMinPoint(0) & "," _
-                        & extractMinPoint(1) & "," _
-                        & extractMinPoint(2) & "," _
-                        & extractMaxPoint(0) & "," _
-                        & extractMaxPoint(1) & "," _
-                        & extractMaxPoint(2) & vbCrLf
-            
-            Erase extractMinPoint
-            Erase extractMaxPoint
-            
-        End If
+        Set extractBlock = extractEntity
+        
+        If Not extractBlock.Name = frame_blockname Then _
+            GoTo Continue_extractEntity
+        
+        ' ページ番号取得およびページ座標取得
+        Call CommonSub.FetchFrameName _
+            (extractBlock, frame_tag, extractPageNo)
+        Call CommonSub.FetchCorrectSize _
+            (extractBlock, extractMinPoint, extractMaxPoint)
+        
+        extractPageNo = CommonFunction.FormatString(extractPageNo)
+        extractLayer = CommonFunction.FormatString(extractBlock.Layer)
+        extractColor = extractBlock.TrueColor.ColorIndex
+        
+        output_data = output_data _
+                    & extractPageNo & "," _
+                    & extractLayer & "," _
+                    & extractColor & "," _
+                    & extractMinPoint(0) & "," _
+                    & extractMinPoint(1) & "," _
+                    & extractMinPoint(2) & "," _
+                    & extractMaxPoint(0) & "," _
+                    & extractMaxPoint(1) & "," _
+                    & extractMaxPoint(2) & vbCrLf
+        
+        Erase extractMinPoint, extractMaxPoint
         
 Continue_extractEntity:
         
     Next extractEntity
     
-    ' データに変更がない場合は値を削除
+    ' 値の削除または最終行の改行削除
     If bufferData = output_data Then
         output_data = ""
-        Exit Sub
+    Else
+        output_data = Left(output_data, Len(output_data) - 2)
     End If
     
-    ' 最終行の改行削除
-    output_data = Left(output_data, Len(output_data) - 2)
-    
 End Sub
-
