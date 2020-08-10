@@ -10,7 +10,7 @@ Option Explicit
 Public Sub OutputFrameList(ByVal frame_blockname As String, _
                            ByVal frame_tag As String)
     
-    'On Error GoTo Error_Handler
+    On Error GoTo Error_Handler
     
     Dim outputFile As String
     Dim outputData As String
